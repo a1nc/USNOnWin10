@@ -26,7 +26,7 @@ void FindUSNRecordRecursively(USN_RECORD * record, set<DWORDLONG>& memo)
 	}
 	memo.insert(record->FileReferenceNumber);
 	PrintUSNRecord(record);
-	// construct the parnet file reference number MFT data
+	//// construct the parnet file reference number MFT data
 	MFT_ENUM_DATA_V0 mft{ record->ParentFileReferenceNumber, 0, maxusn };
 	
 	void * buffer;
@@ -47,8 +47,20 @@ void FindUSNRecordRecursively(USN_RECORD * record, set<DWORDLONG>& memo)
 	parentRecord = (USN_RECORD *)((USN *)buffer + 1);
 	if (parentRecord->FileReferenceNumber != record->ParentFileReferenceNumber) {
 		return;
+	} else {
+		//WCHAR * filename;
+		//WCHAR * filenameend;
+		//filename = (WCHAR *)(((BYTE *)record) + record->FileNameOffset);
+		//filenameend = (WCHAR *)(((BYTE *)record) + record->FileNameOffset + record->FileNameLength);
+		//WCHAR * pfilename;
+		//WCHAR * pfilenameend;
+		//pfilename = (WCHAR *)(((BYTE *)parentRecord) + parentRecord->FileNameOffset);
+		//pfilenameend = (WCHAR *)(((BYTE *)parentRecord) + parentRecord->FileNameOffset + parentRecord->FileNameLength);
+		//printf("FileName: %.*ls\\%.*ls\n", pfilenameend - pfilename, pfilename, filenameend - filename, filename);
+		//
 	}
-	FindUSNRecordRecursively(parentRecord, memo);
+	VirtualFree(buffer, 0, MEM_RELEASE);
+	//FindUSNRecordRecursively(parentRecord, memo);
 }
 
 int main(int argc, char ** argv) {
@@ -70,17 +82,29 @@ int main(int argc, char ** argv) {
 	std::string outstr;
 	WchartToString(volumeName, outstr);
 	std::cout << "Init target volume is " << outstr << std::endl;
-
+	
 	drive = CreateVolumeHandle(volumeName);
 	if (drive == INVALID_HANDLE_VALUE) {
 		std::cout << "ERROR : Create volume handle error : " << GetLastError();
 		return 0;
 	}
 
+	/*if (DeleteUSNJouranl(drive)) {
+		std::cout << "Delete for volume journal success" << std::endl;
+	} else {
+		std::cout << "Delete for volume journal failed !" << std::endl;
+	}
+
 	if (!QueryUSNJournal(drive, buffer, BUFFER_SIZE, bytecount)) {
 		printf("FSCTL_QUERY_USN_JOURNAL: %u\n", GetLastError());
-		return 0;
-	}
+		std::cout << "Create for volume " << volumeName << std::endl;
+		if (CreateUSNJouranl(drive)) {
+			std::cout << "Create for volume success !" << std::endl;
+		} else {
+			std::cout << "Create for volume failed !" << std::endl;
+			return 0;
+		}
+	}*/
 
 	USN_JOURNAL_DATA * journal;
 	journal = (USN_JOURNAL_DATA *)buffer;
@@ -88,13 +112,12 @@ int main(int argc, char ** argv) {
 
 	maxusn = journal->MaxUsn;
 	MFT_ENUM_DATA_V0 mft{0, 0, maxusn};
-	set<DWORDLONG> memo;
-
 	USN_RECORD * record;
 	USN_RECORD * recordend;
 	DWORDLONG nextid;
 	DWORDLONG filecount = 0;
 	for (;;) {
+		set<DWORDLONG> memo;
 		if (!QueryMFTEnumData(drive, mft, buffer, BUFFER_SIZE, bytecount)) {
 			EndPrint(nextid, filecount, starttick);
 			return 0;

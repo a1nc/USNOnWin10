@@ -2,10 +2,20 @@
 #define USN_UTILS_H
 
 #include <Windows.h>
+#include <iostream>
 #include <string>
 #include <set>
 
 HANDLE CreateVolumeHandle(WCHAR volume[7]);
+#define BUFFER_SIZE (1024 * 1024)
+
+bool GetNTFSVolumeInfo(HANDLE& volume, void*& buffer, DWORD bufferSize, DWORD& retBytes);
+
+bool CreateUSNJouranl(HANDLE& volume);
+
+bool DeleteUSNJouranl(HANDLE& volume);
+
+NTFS_EXTENDED_VOLUME_DATA GetNTFSVolumeInfo(HANDLE& volume);
 
 bool QueryUSNJournal(HANDLE& volume, void*& buffer, DWORD buffer_size, DWORD& bytecount);
 

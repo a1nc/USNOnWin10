@@ -161,6 +161,9 @@
     <ClCompile Include="StringUtils.cpp" />
     <ClCompile Include="UsnUtils.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="roadmap.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

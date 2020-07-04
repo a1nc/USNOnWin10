@@ -10,6 +10,95 @@ HANDLE CreateVolumeHandle(WCHAR volume[7]) {
 						NULL);
 }
 
+bool CreateUSNJouranl(HANDLE& volume) {
+	CREATE_USN_JOURNAL_DATA journalData{};
+	bool retStatus = DeviceIoControl(volume,
+						FSCTL_CREATE_USN_JOURNAL,
+						&journalData,
+						sizeof(journalData),
+						NULL,
+						0,
+						0,
+						NULL);
+	if (!retStatus) {
+		std::cout << "ERROR : CreateUSNJouranl failed, error code : " << GetLastError() << std::endl;
+		return false;
+	} else {
+		return true;
+	}
+}
+
+bool DeleteUSNJouranl(HANDLE& volume) {
+	void* buffer = VirtualAlloc(NULL, BUFFER_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	DWORD bytecount = 0;
+	if (buffer == nullptr) {
+		std::cout << "ERROR : Allocate virtual memory failed, error code : " << GetLastError() << std::endl;
+		return false;
+	}
+	if (!QueryUSNJournal(volume, buffer, BUFFER_SIZE, bytecount)) {
+		std::cout << "ERROR : QueryUSNJournal failed, error code : " << GetLastError() << std::endl;
+		VirtualFree(buffer, 0, MEM_RELEASE);
+		return false;
+	}
+
+	USN_JOURNAL_DATA journal = *(USN_JOURNAL_DATA *)buffer;
+	DELETE_USN_JOURNAL_DATA deleteJournalData{journal.UsnJournalID, USN_DELETE_FLAG_DELETE};
+	// USN_DELETE_FLAG_DELETE or USN_DELETE_FLAG_NOTIFY
+	bool retStatus = DeviceIoControl(volume,
+						FSCTL_DELETE_USN_JOURNAL,
+						&deleteJournalData,
+						sizeof(deleteJournalData),
+						NULL,
+						0,
+						0,
+						NULL);
+	VirtualFree(buffer, 0, MEM_RELEASE);
+	if (!retStatus) {
+		std::cout << "ERROR : DeleteUSNJouranl failed, error code : " << GetLastError() << std::endl;
+		return false;
+	} else {
+		return true;
+	}
+}
+
+bool GetNTFSVolumeInfo(HANDLE& volume, void*& buffer, DWORD bufferSize, DWORD& retBytes) {
+	bool retStatus = DeviceIoControl(volume,
+						FSCTL_GET_NTFS_VOLUME_DATA,
+						NULL,
+						0,
+						buffer,
+						bufferSize,
+						&retBytes,
+						NULL);
+	return retStatus;
+}
+
+NTFS_EXTENDED_VOLUME_DATA GetNTFSVolumeInfo(HANDLE& volume) {
+	NTFS_EXTENDED_VOLUME_DATA retData{};
+	void* buffer = VirtualAlloc(NULL, BUFFER_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	if (buffer == nullptr) {
+		std::cout << "ERROR : Allocate virtual memory failed, error code : " << GetLastError() << std::endl;
+		return retData;
+	}
+
+	DWORD retBytes = 0;
+	bool retStatus = DeviceIoControl(volume,
+						FSCTL_GET_NTFS_VOLUME_DATA,
+						NULL,
+						0,
+						buffer,
+						BUFFER_SIZE,
+						&retBytes,
+						NULL);
+	if (!retStatus) {
+		std::cout << "ERROR : GetNTFSVolumeInfo failed, error code : " << GetLastError() << std::endl;
+		return retData;
+	}
+	retData = *(NTFS_EXTENDED_VOLUME_DATA*)buffer;
+	VirtualFree(buffer, 0, MEM_RELEASE);
+	return retData;
+}
+
 bool QueryUSNJournal(HANDLE& volume, void*& buffer, DWORD bufferSize, DWORD& bytecount) {
 	bool retStatus = DeviceIoControl(volume, 
 						FSCTL_QUERY_USN_JOURNAL,
