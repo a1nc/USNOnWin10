@@ -2,8 +2,8 @@
 #define INTERACTIVE_UTILS_H
 
 #include <Windows.h>
-#include <string>
 #include <iostream>
+#include <string>
 
 const std::string DEFAULT_VOLUME_STR = "\\\\?\\f:";
 
@@ -13,4 +13,4 @@ void EndPrint(DWORD nextid, DWORD filecount, DWORD starttick);
 
 WCHAR GetTargetVolumeSymbolFromArgs(int argc, char** argv);
 
-#endif //INTERACTIVE_UTILS_H
+#endif  // INTERACTIVE_UTILS_H

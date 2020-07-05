@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GlobalLimits.h" />
     <ClInclude Include="InteractiveUtils.h" />
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="UsnUtils.h" />

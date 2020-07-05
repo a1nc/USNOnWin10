@@ -24,6 +24,9 @@
     <ClInclude Include="InteractiveUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GlobalLimits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="USNOnWin10.cpp">
